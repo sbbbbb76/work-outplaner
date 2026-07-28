@@ -269,6 +269,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               accept=".json"
               className="hidden"
             />
+
+            {/* Wipe Cloud Database Sample Data */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { wipeAllFirestoreCollections } = await import('../services/firebaseService');
+                  await wipeAllFirestoreCollections();
+                  onShowToast('已成功清理 Firebase 雲端資料庫所有舊資料！', 'success');
+                } catch (err) {
+                  onShowToast('清理雲端資料時失敗，請確認雲端存取權限', 'error');
+                }
+              }}
+              className="w-full flex items-center justify-between p-3.5 bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200 rounded-2xl transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-rose-900">一鍵清空 Firebase 雲端所有舊資料</div>
+                  <div className="text-[11px] text-rose-700">移除 Firebase Console 中的所有舊範本集合</div>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-rose-700 bg-rose-200/60 px-2.5 py-1 rounded-lg border border-rose-300">
+                一鍵清空
+              </span>
+            </button>
           </div>
 
           {/* Section 3: Status & Info */}

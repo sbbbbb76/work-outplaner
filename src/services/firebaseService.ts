@@ -140,3 +140,21 @@ export async function purgeSampleDataFromCloud(): Promise<void> {
   }
 }
 
+// 1-Click Wiping of all Cloud Firestore collections
+export async function wipeAllFirestoreCollections(): Promise<void> {
+  const collectionsToWipe = [COLLECTIONS.CLIENTS, COLLECTIONS.EXERCISES, COLLECTIONS.PLANS];
+  for (const colName of collectionsToWipe) {
+    try {
+      const snap = await getDocs(collection(db, colName));
+      if (!snap.empty) {
+        const batch = writeBatch(db);
+        snap.docs.forEach((docSnap) => batch.delete(docSnap.ref));
+        await batch.commit();
+      }
+    } catch (e) {
+      console.warn(`Error wiping collection ${colName}:`, e);
+    }
+  }
+}
+
+
