@@ -455,7 +455,7 @@ export default function App() {
   const activePlanClient = activePlan ? clients.find((c) => c.id === activePlan.clientId) : undefined;
 
   return (
-    <div className="min-h-screen bg-[#fdf2f4] text-[#382328] flex flex-col font-sans selection:bg-rose-500 selection:text-white">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#fdf2f4] text-[#382328] flex flex-col font-sans selection:bg-rose-500 selection:text-white">
       {/* Toast Overlay */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
