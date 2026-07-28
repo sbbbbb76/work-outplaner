@@ -11,6 +11,7 @@ import {
   Database,
   Sliders,
   Layers,
+  Trash2,
 } from 'lucide-react';
 import { WorkoutPlan, Exercise, Client } from '../types';
 
