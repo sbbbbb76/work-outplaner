@@ -253,10 +253,11 @@ export default function App() {
     setClients((prev) => [...prev, newClient]);
     try {
       await saveClientDoc(newClient);
-      showToast(`已新增學員《${newClient.name}》`, 'success');
+      showToast(`已新增學員《${newClient.name}》並成功同步至 Firebase 雲端！`, 'success');
     } catch (err) {
+      const errorMsg = (err as Error)?.message || '連線受阻';
       console.warn('Firestore error saving client:', err);
-      showToast(`已新增學員《${newClient.name}》（已儲存於本地快取）`, 'info');
+      showToast(`已新增《${newClient.name}》（本地已儲存，雲端同步警示：${errorMsg}）`, 'info');
     }
   };
 
@@ -289,10 +290,11 @@ export default function App() {
     setExercises((prev) => [...prev, newEx]);
     try {
       await saveExerciseDoc(newEx);
-      showToast(`已新增動作《${newEx.name}》`, 'success');
+      showToast(`已新增動作《${newEx.name}》並成功同步至 Firebase 雲端！`, 'success');
     } catch (err) {
+      const errorMsg = (err as Error)?.message || '連線受阻';
       console.warn('Firestore error saving exercise:', err);
-      showToast(`已新增動作《${newEx.name}》（已儲存於本地快取）`, 'info');
+      showToast(`已新增動作《${newEx.name}》（本地已儲存，雲端同步警示：${errorMsg}）`, 'info');
     }
   };
 
@@ -300,7 +302,7 @@ export default function App() {
     setExercises((prev) => prev.map((ex) => (ex.id === updatedEx.id ? updatedEx : ex)));
     try {
       await saveExerciseDoc(updatedEx);
-      showToast('已更新動作資料', 'success');
+      showToast('已更新動作資料並同步至雲端', 'success');
     } catch (err) {
       console.warn('Firestore error updating exercise:', err);
     }
