@@ -225,15 +225,20 @@ export default function App() {
   };
 
   // Client Operations
-  const handleAddClient = (newClientData: Omit<Client, 'id' | 'createdAt'>) => {
+  const handleAddClient = async (newClientData: Omit<Client, 'id' | 'createdAt'>) => {
     const newClient: Client = {
       ...newClientData,
       id: 'client-' + Date.now(),
       createdAt: new Date().toISOString(),
     };
-    setClients((prev) => [...prev, newClient]);
-    saveClientDoc(newClient).catch((err) => console.error('Firestore error saving client:', err));
-    showToast(`已新增學員《${newClient.name}》`, 'success');
+    try {
+      await saveClientDoc(newClient);
+      setClients((prev) => [...prev, newClient]);
+      showToast(`已新增學員《${newClient.name}》`, 'success');
+    } catch (err) {
+      console.error('Firestore error saving client:', err);
+      showToast('新增失敗：請檢查網路或雲端資料庫權限', 'error');
+    }
   };
 
   const handleDeleteClient = (clientId: string) => {
@@ -243,28 +248,45 @@ export default function App() {
       title: '確認刪除學員',
       message: `您確定要刪除學員《${client?.name || ''}》嗎？此操作無法復原。`,
       confirmText: '確認刪除',
-      onConfirm: () => {
-        setClients((prev) => prev.filter((c) => c.id !== clientId));
-        deleteClientDoc(clientId).catch((err) => console.error('Firestore error deleting client:', err));
-        showToast('已刪除學員資料', 'info');
+      onConfirm: async () => {
+        try {
+          await deleteClientDoc(clientId);
+          setClients((prev) => prev.filter((c) => c.id !== clientId));
+          showToast('已成功刪除學員資料', 'info');
+        } catch (err) {
+          console.error('Firestore error deleting client:', err);
+          showToast('刪除失敗：雲端資料庫受阻，請檢查權限', 'error');
+        }
       },
     });
   };
 
   // Exercise Library Operations
-  const handleAddExercise = (newExData: Omit<Exercise, 'id' | 'createdAt'>) => {
+  const handleAddExercise = async (newExData: Omit<Exercise, 'id' | 'createdAt'>) => {
     const newEx: Exercise = {
       ...newExData,
       id: 'ex-' + Date.now(),
       createdAt: new Date().toISOString(),
     };
-    setExercises((prev) => [...prev, newEx]);
-    saveExerciseDoc(newEx).catch((err) => console.error('Firestore error saving exercise:', err));
+    try {
+      await saveExerciseDoc(newEx);
+      setExercises((prev) => [...prev, newEx]);
+      showToast(`已新增動作《${newEx.name}》`, 'success');
+    } catch (err) {
+      console.error('Firestore error saving exercise:', err);
+      showToast('新增動作失敗：請檢查雲端權限', 'error');
+    }
   };
 
-  const handleUpdateExercise = (updatedEx: Exercise) => {
-    setExercises((prev) => prev.map((ex) => (ex.id === updatedEx.id ? updatedEx : ex)));
-    saveExerciseDoc(updatedEx).catch((err) => console.error('Firestore error updating exercise:', err));
+  const handleUpdateExercise = async (updatedEx: Exercise) => {
+    try {
+      await saveExerciseDoc(updatedEx);
+      setExercises((prev) => prev.map((ex) => (ex.id === updatedEx.id ? updatedEx : ex)));
+      showToast('已更新動作資料', 'success');
+    } catch (err) {
+      console.error('Firestore error updating exercise:', err);
+      showToast('更新動作失敗：請檢查雲端權限', 'error');
+    }
   };
 
   const handleDeleteExercise = (exerciseId: string) => {
@@ -274,16 +296,21 @@ export default function App() {
       title: '確認刪除動作範本',
       message: `您確定要從動作庫刪除《${ex?.name || ''}》嗎？已存在的計畫不受影響。`,
       confirmText: '確認刪除',
-      onConfirm: () => {
-        setExercises((prev) => prev.filter((item) => item.id !== exerciseId));
-        deleteExerciseDoc(exerciseId).catch((err) => console.error('Firestore error deleting exercise:', err));
-        showToast('已刪除動作範本', 'info');
+      onConfirm: async () => {
+        try {
+          await deleteExerciseDoc(exerciseId);
+          setExercises((prev) => prev.filter((item) => item.id !== exerciseId));
+          showToast('已成功從雲端刪除動作範本', 'info');
+        } catch (err) {
+          console.error('Firestore error deleting exercise:', err);
+          showToast('刪除失敗：雲端資料庫受阻，請檢查權限', 'error');
+        }
       },
     });
   };
 
   // Workout Plan Operations
-  const handleCreateNewPlan = () => {
+  const handleCreateNewPlan = async () => {
     const newPlan: WorkoutPlan = {
       id: 'plan-' + Date.now(),
       title: '全新自訂訓練菜單',
@@ -295,16 +322,26 @@ export default function App() {
       createdAt: new Date().toISOString(),
     };
 
-    setPlans((prev) => [newPlan, ...prev]);
-    savePlanDoc(newPlan).catch((err) => console.error('Firestore error creating plan:', err));
-    setActivePlanId(newPlan.id);
-    navigateTo(`#/edit/${newPlan.id}`);
-    showToast('已建立新訓練菜單，請開始編輯細節！', 'success');
+    try {
+      await savePlanDoc(newPlan);
+      setPlans((prev) => [newPlan, ...prev]);
+      setActivePlanId(newPlan.id);
+      navigateTo(`#/edit/${newPlan.id}`);
+      showToast('已建立新訓練菜單，請開始編輯細節！', 'success');
+    } catch (err) {
+      console.error('Firestore error creating plan:', err);
+      showToast('建立菜單失敗：請檢查雲端權限', 'error');
+    }
   };
 
-  const handleUpdatePlan = (updatedPlan: WorkoutPlan) => {
-    setPlans((prev) => prev.map((p) => (p.id === updatedPlan.id ? updatedPlan : p)));
-    savePlanDoc(updatedPlan).catch((err) => console.error('Firestore error updating plan:', err));
+  const handleUpdatePlan = async (updatedPlan: WorkoutPlan) => {
+    try {
+      await savePlanDoc(updatedPlan);
+      setPlans((prev) => prev.map((p) => (p.id === updatedPlan.id ? updatedPlan : p)));
+    } catch (err) {
+      console.error('Firestore error updating plan:', err);
+      showToast('更新菜單失敗：請檢查雲端權限', 'error');
+    }
   };
 
   const handleDeletePlan = (planId: string) => {
@@ -314,12 +351,17 @@ export default function App() {
       title: '刪除訓練菜單',
       message: `您確定要刪除《${plan?.title || ''}》菜單嗎？此操作無法撤銷。`,
       confirmText: '確認刪除',
-      onConfirm: () => {
-        setPlans((prev) => prev.filter((p) => p.id !== planId));
-        deletePlanDoc(planId).catch((err) => console.error('Firestore error deleting plan:', err));
-        showToast('已成功刪除該訓練菜單', 'info');
-        if (activePlanId === planId) {
-          navigateTo('#/dashboard');
+      onConfirm: async () => {
+        try {
+          await deletePlanDoc(planId);
+          setPlans((prev) => prev.filter((p) => p.id !== planId));
+          showToast('已成功從雲端刪除該訓練菜單', 'info');
+          if (activePlanId === planId) {
+            navigateTo('#/dashboard');
+          }
+        } catch (err) {
+          console.error('Firestore error deleting plan:', err);
+          showToast('刪除失敗：雲端資料庫受阻，請檢查權限', 'error');
         }
       },
     });
