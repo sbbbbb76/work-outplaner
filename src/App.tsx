@@ -32,6 +32,13 @@ const LOCAL_STORAGE_KEYS = {
 
 const LEGACY_SAMPLE_IDS = ['client-1', 'client-2', 'client-3', 'ex-1', 'ex-2', 'ex-3', 'ex-4', 'ex-5', 'plan-101', 'plan-102'];
 
+// Clear old legacy cache keys automatically on startup to prevent stale cache bugs
+try {
+  ['wtp_clients_v1', 'wtp_exercises_v1', 'wtp_plans_v1'].forEach((k) => localStorage.removeItem(k));
+} catch (e) {
+  // ignore
+}
+
 const filterSampleData = <T extends { id: string }>(items: T[]): T[] => {
   return items.filter((item) => !LEGACY_SAMPLE_IDS.includes(item.id));
 };
