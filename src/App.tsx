@@ -115,7 +115,7 @@ export default function App() {
   useEffect(() => {
     const unsubscribeClients = subscribeClients(
       (data) => {
-        if (data && data.length > 0) {
+        if (data) {
           setClients(data);
           setIsFirebaseSynced(true);
         }
@@ -125,7 +125,7 @@ export default function App() {
 
     const unsubscribeExercises = subscribeExercises(
       (data) => {
-        if (data && data.length > 0) {
+        if (data) {
           setExercises(data);
           setIsFirebaseSynced(true);
         }
@@ -135,7 +135,7 @@ export default function App() {
 
     const unsubscribePlans = subscribePlans(
       (data) => {
-        if (data && data.length > 0) {
+        if (data) {
           setPlans(data);
           setIsFirebaseSynced(true);
         }

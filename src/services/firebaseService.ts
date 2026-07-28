@@ -17,7 +17,7 @@ const COLLECTIONS = {
   PLANS: 'plans',
 };
 
-// Realtime subscription helpers with automatic seeding
+// Realtime subscription helpers with automatic seeding (only on initial environment setup)
 export function subscribeClients(
   onUpdate: (clients: Client[]) => void,
   onError?: (err: Error) => void
@@ -28,20 +28,26 @@ export function subscribeClients(
     colRef,
     async (snapshot) => {
       if (snapshot.empty) {
-        // Seed initial clients if collection is completely empty
-        try {
-          const batch = writeBatch(db);
-          INITIAL_CLIENTS.forEach((c) => {
-            const docRef = doc(db, COLLECTIONS.CLIENTS, c.id);
-            batch.set(docRef, c);
-          });
-          await batch.commit();
-        } catch (e) {
-          console.error('Error seeding clients into Firestore:', e);
+        const hasSeeded = localStorage.getItem('wtp_has_seeded_clients_v1');
+        if (!hasSeeded) {
+          try {
+            localStorage.setItem('wtp_has_seeded_clients_v1', 'true');
+            const batch = writeBatch(db);
+            INITIAL_CLIENTS.forEach((c) => {
+              const docRef = doc(db, COLLECTIONS.CLIENTS, c.id);
+              batch.set(docRef, c);
+            });
+            await batch.commit();
+          } catch (e) {
+            console.error('Error seeding clients into Firestore:', e);
+            onUpdate([]);
+          }
+        } else {
+          onUpdate([]);
         }
       } else {
+        localStorage.setItem('wtp_has_seeded_clients_v1', 'true');
         const data = snapshot.docs.map((d) => d.data() as Client);
-        // Sort by createdAt or name
         data.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
         onUpdate(data);
       }
@@ -63,18 +69,25 @@ export function subscribeExercises(
     colRef,
     async (snapshot) => {
       if (snapshot.empty) {
-        // Seed initial exercises if empty
-        try {
-          const batch = writeBatch(db);
-          INITIAL_EXERCISES.forEach((ex) => {
-            const docRef = doc(db, COLLECTIONS.EXERCISES, ex.id);
-            batch.set(docRef, ex);
-          });
-          await batch.commit();
-        } catch (e) {
-          console.error('Error seeding exercises into Firestore:', e);
+        const hasSeeded = localStorage.getItem('wtp_has_seeded_ex_v1');
+        if (!hasSeeded) {
+          try {
+            localStorage.setItem('wtp_has_seeded_ex_v1', 'true');
+            const batch = writeBatch(db);
+            INITIAL_EXERCISES.forEach((ex) => {
+              const docRef = doc(db, COLLECTIONS.EXERCISES, ex.id);
+              batch.set(docRef, ex);
+            });
+            await batch.commit();
+          } catch (e) {
+            console.error('Error seeding exercises into Firestore:', e);
+            onUpdate([]);
+          }
+        } else {
+          onUpdate([]);
         }
       } else {
+        localStorage.setItem('wtp_has_seeded_ex_v1', 'true');
         const data = snapshot.docs.map((d) => d.data() as Exercise);
         data.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
         onUpdate(data);
@@ -97,18 +110,25 @@ export function subscribePlans(
     colRef,
     async (snapshot) => {
       if (snapshot.empty) {
-        // Seed initial plans if empty
-        try {
-          const batch = writeBatch(db);
-          INITIAL_PLANS.forEach((p) => {
-            const docRef = doc(db, COLLECTIONS.PLANS, p.id);
-            batch.set(docRef, p);
-          });
-          await batch.commit();
-        } catch (e) {
-          console.error('Error seeding plans into Firestore:', e);
+        const hasSeeded = localStorage.getItem('wtp_has_seeded_plans_v1');
+        if (!hasSeeded) {
+          try {
+            localStorage.setItem('wtp_has_seeded_plans_v1', 'true');
+            const batch = writeBatch(db);
+            INITIAL_PLANS.forEach((p) => {
+              const docRef = doc(db, COLLECTIONS.PLANS, p.id);
+              batch.set(docRef, p);
+            });
+            await batch.commit();
+          } catch (e) {
+            console.error('Error seeding plans into Firestore:', e);
+            onUpdate([]);
+          }
+        } else {
+          onUpdate([]);
         }
       } else {
+        localStorage.setItem('wtp_has_seeded_plans_v1', 'true');
         const data = snapshot.docs.map((d) => d.data() as WorkoutPlan);
         data.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
         onUpdate(data);
