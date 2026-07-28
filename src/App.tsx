@@ -39,8 +39,39 @@ try {
   // ignore
 }
 
+const CHECKLIST_DATE_KEY = 'wtp_checklist_last_date_v1';
+
 const filterSampleData = <T extends { id: string }>(items: T[]): T[] => {
   return items.filter((item) => !LEGACY_SAMPLE_IDS.includes(item.id));
+};
+
+// Helper to check and reset checklist state on a new day
+const processDailyChecklist = (plansList: WorkoutPlan[]): { plans: WorkoutPlan[]; isNewDay: boolean } => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const lastDate = localStorage.getItem(CHECKLIST_DATE_KEY);
+
+    if (!lastDate) {
+      localStorage.setItem(CHECKLIST_DATE_KEY, today);
+      return { plans: plansList, isNewDay: false };
+    }
+
+    if (lastDate !== today) {
+      // New day detected! Reset completedSets across all plans
+      localStorage.setItem(CHECKLIST_DATE_KEY, today);
+      const resetPlans = plansList.map((plan) => ({
+        ...plan,
+        exercises: plan.exercises.map((ex) => ({
+          ...ex,
+          completedSets: Array(ex.sets).fill(false),
+        })),
+      }));
+      return { plans: resetPlans, isNewDay: true };
+    }
+  } catch (e) {
+    console.warn('Error processing daily checklist date:', e);
+  }
+  return { plans: plansList, isNewDay: false };
 };
 
 export default function App() {
@@ -74,10 +105,9 @@ export default function App() {
   const [plans, setPlans] = useState<WorkoutPlan[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PLANS);
-      if (saved !== null) {
-        return filterSampleData(JSON.parse(saved));
-      }
-      return filterSampleData(INITIAL_PLANS);
+      const initialList = saved !== null ? filterSampleData(JSON.parse(saved)) : filterSampleData(INITIAL_PLANS);
+      const { plans: processedPlans } = processDailyChecklist(initialList);
+      return processedPlans;
     } catch (e) {
       console.warn('Failed reading plans from localStorage', e);
       return [];
@@ -162,8 +192,13 @@ export default function App() {
     const unsubscribePlans = subscribePlans(
       (data) => {
         if (data) {
-          setPlans(filterSampleData(data));
+          const filtered = filterSampleData(data);
+          const { plans: processedPlans, isNewDay } = processDailyChecklist(filtered);
+          setPlans(processedPlans);
           setIsFirebaseSynced(true);
+          if (isNewDay) {
+            processedPlans.forEach((p) => savePlanDoc(p));
+          }
         }
       },
       (err) => console.warn('Plans sync fallback:', err)

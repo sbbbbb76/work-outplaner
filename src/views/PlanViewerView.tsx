@@ -79,6 +79,17 @@ export const PlanViewerView: React.FC<PlanViewerViewProps> = ({
   const progressPercent =
     totalSetsCount > 0 ? Math.round((totalCompletedSetsCount / totalSetsCount) * 100) : 0;
 
+  const handleResetChecklist = () => {
+    if (!onUpdatePlanExercises) return;
+    const newExercises = plan.exercises.map((ex) => ({
+      ...ex,
+      completedSets: Array(ex.sets).fill(false),
+    }));
+    onUpdatePlanExercises(newExercises);
+    onShowToast('已手動重置本日訓練 Check list！', 'info');
+  };
+
+  // Progress Tracker Bar
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-200 print:p-0 text-[#382328]">
       {/* Top Header / Nav when in app or standalone */}
@@ -193,15 +204,26 @@ export const PlanViewerView: React.FC<PlanViewerViewProps> = ({
         </div>
 
         {/* Progress Tracker Bar */}
-        <div className="pt-2">
-          <div className="flex items-center justify-between text-xs font-bold text-[#6e545a] mb-1.5">
+        <div className="pt-2 space-y-2">
+          <div className="flex flex-wrap items-center justify-between text-xs font-bold text-[#6e545a] gap-2">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-rose-500" />
-              本日訓練進度
+              本日訓練進度 ({new Date().toLocaleDateString()})
             </span>
-            <span className="font-mono text-rose-600 font-extrabold">
-              {totalCompletedSetsCount} / {totalSetsCount} 組 ({progressPercent}%)
-            </span>
+            <div className="flex items-center gap-3">
+              {totalCompletedSetsCount > 0 && onUpdatePlanExercises && (
+                <button
+                  type="button"
+                  onClick={handleResetChecklist}
+                  className="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition-colors"
+                >
+                  重置本日打勾
+                </button>
+              )}
+              <span className="font-mono text-rose-600 font-extrabold">
+                {totalCompletedSetsCount} / {totalSetsCount} 組 ({progressPercent}%)
+              </span>
+            </div>
           </div>
 
           <div className="w-full h-3 bg-[#f2e7d8] rounded-full overflow-hidden p-0.5 border border-[#ded0be]">
