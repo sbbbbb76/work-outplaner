@@ -90,10 +90,15 @@ export function subscribePlans(
   );
 }
 
+// Helper to remove 'undefined' properties which cause Firestore setDoc rejections
+function sanitizeForFirestore<T>(data: T): Record<string, any> {
+  return JSON.parse(JSON.stringify(data));
+}
+
 // Client mutations
 export async function saveClientDoc(client: Client): Promise<void> {
   const docRef = doc(db, COLLECTIONS.CLIENTS, client.id);
-  await setDoc(docRef, client, { merge: true });
+  await setDoc(docRef, sanitizeForFirestore(client), { merge: true });
 }
 
 export async function deleteClientDoc(clientId: string): Promise<void> {
@@ -104,7 +109,7 @@ export async function deleteClientDoc(clientId: string): Promise<void> {
 // Exercise mutations
 export async function saveExerciseDoc(exercise: Exercise): Promise<void> {
   const docRef = doc(db, COLLECTIONS.EXERCISES, exercise.id);
-  await setDoc(docRef, exercise, { merge: true });
+  await setDoc(docRef, sanitizeForFirestore(exercise), { merge: true });
 }
 
 export async function deleteExerciseDoc(exerciseId: string): Promise<void> {
@@ -115,7 +120,7 @@ export async function deleteExerciseDoc(exerciseId: string): Promise<void> {
 // WorkoutPlan mutations
 export async function savePlanDoc(plan: WorkoutPlan): Promise<void> {
   const docRef = doc(db, COLLECTIONS.PLANS, plan.id);
-  await setDoc(docRef, plan, { merge: true });
+  await setDoc(docRef, sanitizeForFirestore(plan), { merge: true });
 }
 
 export async function deletePlanDoc(planId: string): Promise<void> {
