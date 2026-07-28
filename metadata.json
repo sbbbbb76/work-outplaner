@@ -1,0 +1,6 @@
+{
+  "name": "IronSharePro",
+  "description": "重量訓練計畫分享網頁 - 建立、管理與分享健身教練與學員的訓練菜單",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

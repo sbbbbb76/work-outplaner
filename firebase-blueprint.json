@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "clients": {
+      "type": "collection",
+      "description": "Client profiles",
+      "fields": {
+        "id": { "type": "string", "description": "Unique client ID" },
+        "name": { "type": "string", "description": "Client name" },
+        "avatarColor": { "type": "string", "description": "Avatar badge color" },
+        "goal": { "type": "string", "description": "Training goal" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "notes": { "type": "string", "description": "Coach notes" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      }
+    },
+    "exercises": {
+      "type": "collection",
+      "description": "Exercise library items",
+      "fields": {
+        "id": { "type": "string", "description": "Unique exercise ID" },
+        "name": { "type": "string", "description": "Exercise name" },
+        "category": { "type": "string", "description": "Muscle category" },
+        "videoUrl": { "type": "string", "description": "Demonstration video URL" },
+        "instructions": { "type": "string", "description": "Exercise instructions" },
+        "targetMuscles": { "type": "string", "description": "Target muscles" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      }
+    },
+    "plans": {
+      "type": "collection",
+      "description": "Workout plans",
+      "fields": {
+        "id": { "type": "string", "description": "Unique plan ID" },
+        "title": { "type": "string", "description": "Plan title" },
+        "description": { "type": "string", "description": "Plan description" },
+        "clientId": { "type": "string", "description": "Assigned client ID" },
+        "difficulty": { "type": "string", "description": "Difficulty level" },
+        "tags": { "type": "array", "description": "Tags list" },
+        "exercises": { "type": "array", "description": "List of plan exercises" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      }
+    }
+  }
+}
