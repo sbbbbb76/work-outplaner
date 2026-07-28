@@ -80,9 +80,9 @@ export default function App() {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.CLIENTS);
       if (saved !== null) {
-        return filterSampleData(JSON.parse(saved));
+        return filterSampleData<Client>(JSON.parse(saved));
       }
-      return filterSampleData(INITIAL_CLIENTS);
+      return filterSampleData<Client>(INITIAL_CLIENTS);
     } catch (e) {
       console.warn('Failed reading clients from localStorage', e);
       return [];
@@ -93,9 +93,9 @@ export default function App() {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.EXERCISES);
       if (saved !== null) {
-        return filterSampleData(JSON.parse(saved));
+        return filterSampleData<Exercise>(JSON.parse(saved));
       }
-      return filterSampleData(INITIAL_EXERCISES);
+      return filterSampleData<Exercise>(INITIAL_EXERCISES);
     } catch (e) {
       console.warn('Failed reading exercises from localStorage', e);
       return [];
@@ -105,7 +105,8 @@ export default function App() {
   const [plans, setPlans] = useState<WorkoutPlan[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PLANS);
-      const initialList = saved !== null ? filterSampleData(JSON.parse(saved)) : filterSampleData(INITIAL_PLANS);
+      const initialList =
+        saved !== null ? filterSampleData<WorkoutPlan>(JSON.parse(saved)) : filterSampleData<WorkoutPlan>(INITIAL_PLANS);
       const { plans: processedPlans } = processDailyChecklist(initialList);
       return processedPlans;
     } catch (e) {
