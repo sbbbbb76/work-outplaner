@@ -122,3 +122,21 @@ export async function deletePlanDoc(planId: string): Promise<void> {
   const docRef = doc(db, COLLECTIONS.PLANS, planId);
   await deleteDoc(docRef);
 }
+
+// Permanently purge legacy sample documents from Cloud Firestore
+export async function purgeSampleDataFromCloud(): Promise<void> {
+  const sampleClientIds = ['client-1', 'client-2', 'client-3'];
+  const sampleExIds = ['ex-1', 'ex-2', 'ex-3', 'ex-4', 'ex-5'];
+  const samplePlanIds = ['plan-101', 'plan-102'];
+
+  try {
+    const batch = writeBatch(db);
+    sampleClientIds.forEach((id) => batch.delete(doc(db, COLLECTIONS.CLIENTS, id)));
+    sampleExIds.forEach((id) => batch.delete(doc(db, COLLECTIONS.EXERCISES, id)));
+    samplePlanIds.forEach((id) => batch.delete(doc(db, COLLECTIONS.PLANS, id)));
+    await batch.commit();
+  } catch (e) {
+    console.warn('Sample data purge warning:', e);
+  }
+}
+

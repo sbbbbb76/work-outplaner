@@ -20,13 +20,20 @@ import {
   deleteExerciseDoc,
   savePlanDoc,
   deletePlanDoc,
+  purgeSampleDataFromCloud,
 } from './services/firebaseService';
 
 const LOCAL_STORAGE_KEYS = {
-  CLIENTS: 'wtp_clients_v1',
-  EXERCISES: 'wtp_exercises_v1',
-  PLANS: 'wtp_plans_v1',
+  CLIENTS: 'wtp_clients_v2',
+  EXERCISES: 'wtp_exercises_v2',
+  PLANS: 'wtp_plans_v2',
   EDIT_MODE: 'wtp_is_edit_mode_v1',
+};
+
+const LEGACY_SAMPLE_IDS = ['client-1', 'client-2', 'client-3', 'ex-1', 'ex-2', 'ex-3', 'ex-4', 'ex-5', 'plan-101', 'plan-102'];
+
+const filterSampleData = <T extends { id: string }>(items: T[]): T[] => {
+  return items.filter((item) => !LEGACY_SAMPLE_IDS.includes(item.id));
 };
 
 export default function App() {
@@ -34,30 +41,39 @@ export default function App() {
   const [clients, setClients] = useState<Client[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.CLIENTS);
-      return saved !== null ? JSON.parse(saved) : INITIAL_CLIENTS;
+      if (saved !== null) {
+        return filterSampleData(JSON.parse(saved));
+      }
+      return filterSampleData(INITIAL_CLIENTS);
     } catch (e) {
       console.warn('Failed reading clients from localStorage', e);
-      return INITIAL_CLIENTS;
+      return [];
     }
   });
 
   const [exercises, setExercises] = useState<Exercise[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.EXERCISES);
-      return saved !== null ? JSON.parse(saved) : INITIAL_EXERCISES;
+      if (saved !== null) {
+        return filterSampleData(JSON.parse(saved));
+      }
+      return filterSampleData(INITIAL_EXERCISES);
     } catch (e) {
       console.warn('Failed reading exercises from localStorage', e);
-      return INITIAL_EXERCISES;
+      return [];
     }
   });
 
   const [plans, setPlans] = useState<WorkoutPlan[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PLANS);
-      return saved !== null ? JSON.parse(saved) : INITIAL_PLANS;
+      if (saved !== null) {
+        return filterSampleData(JSON.parse(saved));
+      }
+      return filterSampleData(INITIAL_PLANS);
     } catch (e) {
       console.warn('Failed reading plans from localStorage', e);
-      return INITIAL_PLANS;
+      return [];
     }
   });
 
@@ -113,10 +129,13 @@ export default function App() {
 
   // Subscribe to Firebase Firestore Realtime Sync
   useEffect(() => {
+    // Purge legacy sample data from Cloud Firestore on initial load
+    purgeSampleDataFromCloud().catch((err) => console.warn('Sample purge error:', err));
+
     const unsubscribeClients = subscribeClients(
       (data) => {
         if (data) {
-          setClients(data);
+          setClients(filterSampleData(data));
           setIsFirebaseSynced(true);
         }
       },
@@ -126,7 +145,7 @@ export default function App() {
     const unsubscribeExercises = subscribeExercises(
       (data) => {
         if (data) {
-          setExercises(data);
+          setExercises(filterSampleData(data));
           setIsFirebaseSynced(true);
         }
       },
@@ -136,7 +155,7 @@ export default function App() {
     const unsubscribePlans = subscribePlans(
       (data) => {
         if (data) {
-          setPlans(data);
+          setPlans(filterSampleData(data));
           setIsFirebaseSynced(true);
         }
       },
