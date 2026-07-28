@@ -34,7 +34,7 @@ export default function App() {
   const [clients, setClients] = useState<Client[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.CLIENTS);
-      return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
+      return saved !== null ? JSON.parse(saved) : INITIAL_CLIENTS;
     } catch (e) {
       console.warn('Failed reading clients from localStorage', e);
       return INITIAL_CLIENTS;
@@ -44,7 +44,7 @@ export default function App() {
   const [exercises, setExercises] = useState<Exercise[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.EXERCISES);
-      return saved ? JSON.parse(saved) : INITIAL_EXERCISES;
+      return saved !== null ? JSON.parse(saved) : INITIAL_EXERCISES;
     } catch (e) {
       console.warn('Failed reading exercises from localStorage', e);
       return INITIAL_EXERCISES;
@@ -54,7 +54,7 @@ export default function App() {
   const [plans, setPlans] = useState<WorkoutPlan[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PLANS);
-      return saved ? JSON.parse(saved) : INITIAL_PLANS;
+      return saved !== null ? JSON.parse(saved) : INITIAL_PLANS;
     } catch (e) {
       console.warn('Failed reading plans from localStorage', e);
       return INITIAL_PLANS;
