@@ -17,6 +17,7 @@ export interface Exercise {
   videoUrl: string;
   instructions: string;
   targetMuscles?: string;
+  tags?: string[];
   createdAt: string;
 }
 

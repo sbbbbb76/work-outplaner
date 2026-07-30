@@ -35,6 +35,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
   const [category, setCategory] = useState<MuscleCategory>('胸部');
   const [videoUrl, setVideoUrl] = useState('');
   const [targetMuscles, setTargetMuscles] = useState('');
+  const [tagsInput, setTagsInput] = useState('');
   const [instructions, setInstructions] = useState('');
 
   const openAddModal = () => {
@@ -43,6 +44,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
     setCategory('胸部');
     setVideoUrl('');
     setTargetMuscles('');
+    setTagsInput('');
     setInstructions('');
     setIsModalOpen(true);
   };
@@ -53,6 +55,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
     setCategory(ex.category);
     setVideoUrl(ex.videoUrl);
     setTargetMuscles(ex.targetMuscles || '');
+    setTagsInput(ex.tags ? ex.tags.join(', ') : '');
     setInstructions(ex.instructions);
     setIsModalOpen(true);
   };
@@ -61,6 +64,11 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
     e.preventDefault();
     if (!name.trim()) return;
 
+    const parsedTags = tagsInput
+      .split(/[,，]/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+
     if (editingEx) {
       onUpdateExercise({
         ...editingEx,
@@ -68,6 +76,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
         category,
         videoUrl: videoUrl.trim(),
         targetMuscles: targetMuscles.trim() || undefined,
+        tags: parsedTags.length > 0 ? parsedTags : undefined,
         instructions: instructions.trim(),
       });
       onShowToast(`已更新動作範本《${name}》`, 'success');
@@ -77,6 +86,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
         category,
         videoUrl: videoUrl.trim(),
         targetMuscles: targetMuscles.trim() || undefined,
+        tags: parsedTags.length > 0 ? parsedTags : undefined,
         instructions: instructions.trim(),
       });
       onShowToast(`已成功新增動作《${name}》到個人動作庫！`, 'success');
@@ -92,6 +102,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
       !q ||
       ex.name.toLowerCase().includes(q) ||
       (ex.targetMuscles && ex.targetMuscles.toLowerCase().includes(q)) ||
+      (ex.tags && ex.tags.some((t) => t.toLowerCase().includes(q))) ||
       ex.instructions.toLowerCase().includes(q);
     return matchesCat && matchesQuery;
   });
@@ -305,6 +316,17 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
                     className="w-full px-3 py-2 bg-[#fdfbf7] border border-[#e2d5c5] rounded-xl text-sm text-[#382328] focus:outline-none focus:border-rose-400"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6e545a] mb-1">自訂標籤 (選填，以逗號分隔)</label>
+                <input
+                  type="text"
+                  placeholder="例如: 啞鈴, 自由重量, 增肌"
+                  value={tagsInput}
+                  onChange={(e) => setTagsInput(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#fdfbf7] border border-[#e2d5c5] rounded-xl text-xs text-[#382328] focus:outline-none focus:border-rose-400"
+                />
               </div>
 
               <div>

@@ -19,6 +19,8 @@ import {
   Tag,
   X,
   Sparkles,
+  Search,
+  Check,
 } from 'lucide-react';
 
 interface PlanEditorViewProps {
@@ -44,6 +46,11 @@ export const PlanEditorView: React.FC<PlanEditorViewProps> = ({
 }) => {
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+
+  // Library modal filters
+  const [libSearchTerm, setLibSearchTerm] = useState('');
+  const [libCategory, setLibCategory] = useState<MuscleCategory | 'ALL'>('ALL');
+  const [libSelectedTag, setLibSelectedTag] = useState<string | null>(null);
 
   // Custom exercise form
   const [customName, setCustomName] = useState('');
@@ -74,6 +81,7 @@ export const PlanEditorView: React.FC<PlanEditorViewProps> = ({
       reps: '10-12 次',
       weight: '自重',
       restSeconds: '90 秒',
+      notes: ex.instructions || '',
       completedSets: [false, false, false],
     };
 
@@ -97,6 +105,7 @@ export const PlanEditorView: React.FC<PlanEditorViewProps> = ({
       reps: '10 次',
       weight: '適中重量',
       restSeconds: '90 秒',
+      notes: customInstructions.trim() || '',
       completedSets: [false, false, false],
     };
 
@@ -455,7 +464,7 @@ export const PlanEditorView: React.FC<PlanEditorViewProps> = ({
                       </label>
                       <input
                         type="text"
-                        value={ex.notes || ''}
+                        value={ex.notes !== undefined ? ex.notes : ex.instructions || ''}
                         onChange={(e) =>
                           handleUpdateExercise(ex.instanceId, { notes: e.target.value })
                         }
@@ -500,60 +509,249 @@ export const PlanEditorView: React.FC<PlanEditorViewProps> = ({
         </div>
       </div>
 
-      {/* Select from Library Modal */}
-      {isLibraryModalOpen && (
-        <div className="fixed inset-0 z-[9000] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-2xl bg-[#fcf8f2] border border-rose-200 rounded-3xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col text-[#382328]"
-          >
-            <div className="flex items-center justify-between p-4 border-b border-[#e8dfd5] bg-[#fcf8f2]/95">
-              <h3 className="text-base font-extrabold text-[#382328] flex items-center gap-2">
-                <Library className="w-4 h-4 text-rose-500" /> 從動作庫挑選動作加入
-              </h3>
-              <button
-                onClick={() => setIsLibraryModalOpen(false)}
-                className="p-1.5 rounded-xl bg-[#f2e7d8] text-[#5c474b] hover:text-[#382328]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* Select from Library Modal with Tag Partitioning & Category Filtering */}
+      {isLibraryModalOpen && (() => {
+        const CATEGORIES: MuscleCategory[] = ['胸部', '背部', '腿部', '肩膀', '手臂', '核心', '全身/有氧'];
 
-            <div className="p-4 overflow-y-auto space-y-3">
-              {exerciseLibrary.length === 0 ? (
-                <p className="text-center py-8 text-sm text-[#7c6368]">動作庫目前無內容。</p>
-              ) : (
-                exerciseLibrary.map((ex) => (
-                  <div
-                    key={ex.id}
-                    className="flex items-center justify-between p-3.5 bg-[#f7f0e6] rounded-2xl border border-[#e2d5c5] hover:border-rose-300 transition-all"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-700 text-[10px] font-bold">
-                          {ex.category}
-                        </span>
-                        <h4 className="text-sm font-bold text-[#382328]">{ex.name}</h4>
-                      </div>
-                      {ex.targetMuscles && (
-                        <p className="text-xs text-[#7c6368] mt-0.5">目標: {ex.targetMuscles}</p>
-                      )}
-                    </div>
+        const allLibraryTags = Array.from(
+          new Set(
+            exerciseLibrary.flatMap((ex) => {
+              const fromTarget = ex.targetMuscles
+                ? ex.targetMuscles.split(/[,，、\s]+/).map((t) => t.trim()).filter((t) => t.length > 0)
+                : [];
+              const fromTags = ex.tags || [];
+              return [...fromTarget, ...fromTags];
+            })
+          )
+        );
 
+        const getPlanCountForExercise = (ex: Exercise) => {
+          return plan.exercises.filter(
+            (pe) => (pe.exerciseId && pe.exerciseId === ex.id) || pe.name === ex.name
+          ).length;
+        };
+
+        const filteredLibraryExercises = exerciseLibrary.filter((ex) => {
+          if (libCategory !== 'ALL' && ex.category !== libCategory) {
+            return false;
+          }
+          if (libSelectedTag) {
+            const inTarget = ex.targetMuscles?.includes(libSelectedTag);
+            const inTags = ex.tags?.includes(libSelectedTag);
+            if (!inTarget && !inTags) return false;
+          }
+          const q = libSearchTerm.toLowerCase().trim();
+          if (q) {
+            const inName = ex.name.toLowerCase().includes(q);
+            const inCategory = ex.category.toLowerCase().includes(q);
+            const inTarget = ex.targetMuscles?.toLowerCase().includes(q);
+            const inTags = ex.tags?.some((t) => t.toLowerCase().includes(q));
+            const inInstr = ex.instructions.toLowerCase().includes(q);
+            if (!inName && !inCategory && !inTarget && !inTags && !inInstr) return false;
+          }
+          return true;
+        });
+
+        return (
+          <div className="fixed inset-0 z-[9000] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-3xl bg-[#fcf8f2] border border-rose-200 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col text-[#382328]"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 sm:px-6 border-b border-[#e8dfd5] bg-[#fcf8f2]/95">
+                <div>
+                  <h3 className="text-base font-extrabold text-[#382328] flex items-center gap-2">
+                    <Library className="w-5 h-5 text-rose-500" /> 從動作庫挑選動作加入菜單
+                  </h3>
+                  <p className="text-xs text-[#7c6368] mt-0.5">
+                    共有 {exerciseLibrary.length} 個範本動作 • 依照部位與標籤分類搜尋
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsLibraryModalOpen(false)}
+                  className="p-1.5 rounded-xl bg-[#f2e7d8] text-[#5c474b] hover:text-[#382328] transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Filter Controls Area */}
+              <div className="p-4 sm:px-6 space-y-3 bg-[#f7f0e6]/60 border-b border-[#e8dfd5]">
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#9c8489]" />
+                  <input
+                    type="text"
+                    placeholder="搜尋動作名稱、肌群、標籤或步驟說明..."
+                    value={libSearchTerm}
+                    onChange={(e) => setLibSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-8 py-2 bg-[#fdfbf7] border border-[#e2d5c5] rounded-xl text-xs text-[#382328] placeholder-[#9c8489] focus:outline-none focus:border-rose-400 font-medium"
+                  />
+                  {libSearchTerm && (
                     <button
                       type="button"
-                      onClick={() => handleAddFromLibrary(ex)}
-                      className="px-3.5 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md transition-all active:scale-95 shrink-0"
+                      onClick={() => setLibSearchTerm('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-200 text-[#7c6368]"
                     >
-                      + 加入菜單
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Primary Category Selector Tabs */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                  <button
+                    type="button"
+                    onClick={() => setLibCategory('ALL')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                      libCategory === 'ALL'
+                        ? 'bg-rose-500 text-white shadow-xs'
+                        : 'bg-[#fcf8f2] border border-[#e8dfd5] text-[#6e545a] hover:text-[#382328]'
+                    }`}
+                  >
+                    全部部位 ({exerciseLibrary.length})
+                  </button>
+                  {CATEGORIES.map((cat) => {
+                    const count = exerciseLibrary.filter((ex) => ex.category === cat).length;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setLibCategory(cat)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                          libCategory === cat
+                            ? 'bg-rose-500 text-white shadow-xs'
+                            : 'bg-[#fcf8f2] border border-[#e8dfd5] text-[#6e545a] hover:text-[#382328]'
+                        }`}
+                      >
+                        {cat} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Dynamic Tag Pills Partitioning */}
+                {allLibraryTags.length > 0 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 text-xs">
+                    <span className="text-[11px] font-bold text-[#6e545a] whitespace-nowrap flex items-center gap-1 shrink-0">
+                      <Tag className="w-3 h-3 text-rose-500" /> 肌群/標籤過濾:
+                    </span>
+                    {libSelectedTag && (
+                      <button
+                        type="button"
+                        onClick={() => setLibSelectedTag(null)}
+                        className="px-2.5 py-0.5 rounded-lg bg-rose-100 text-rose-700 font-bold text-[11px] hover:bg-rose-200 transition-all flex items-center gap-1 shrink-0"
+                      >
+                        全部標籤 <X className="w-3 h-3" />
+                      </button>
+                    )}
+                    {allLibraryTags.map((tag) => {
+                      const isSelected = libSelectedTag === tag;
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setLibSelectedTag(isSelected ? null : tag)}
+                          className={`px-2.5 py-0.5 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all shrink-0 ${
+                            isSelected
+                              ? 'bg-rose-500 text-white shadow-xs'
+                              : 'bg-[#f0e4d4] text-[#5c474b] hover:bg-[#e8d9c5]'
+                          }`}
+                        >
+                          #{tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Exercise List Content */}
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-3 flex-1">
+                {filteredLibraryExercises.length === 0 ? (
+                  <div className="text-center py-12 space-y-3">
+                    <p className="text-sm font-bold text-[#6e545a]">無符合條件的動作</p>
+                    <p className="text-xs text-[#7c6368]">嘗試清除關鍵字、部位或標籤篩選條。</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLibSearchTerm('');
+                        setLibCategory('ALL');
+                        setLibSelectedTag(null);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#f2e7d8] hover:bg-[#ebdcc9] text-xs font-bold text-rose-600 border border-[#ded0be] transition-all"
+                    >
+                      重置所有篩選
                     </button>
                   </div>
-                ))
-              )}
+                ) : (
+                  filteredLibraryExercises.map((ex) => {
+                    const currentPlanCount = getPlanCountForExercise(ex);
+                    return (
+                      <div
+                        key={ex.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-[#f7f0e6] rounded-2xl border border-[#e2d5c5] hover:border-rose-300 transition-all shadow-xs"
+                      >
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-700 border border-rose-200 text-[10px] font-bold">
+                              {ex.category}
+                            </span>
+                            <h4 className="text-sm font-bold text-[#382328]">{ex.name}</h4>
+                            {currentPlanCount > 0 && (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center gap-1 border border-emerald-300">
+                                <Check className="w-3 h-3 text-emerald-600" /> 已在課表中 x{currentPlanCount}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Muscle groups & Tags */}
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#7c6368]">
+                            {ex.targetMuscles && (
+                              <span className="text-[11px] font-semibold text-[#5c474b]">
+                                目標: {ex.targetMuscles}
+                              </span>
+                            )}
+                            {ex.tags && ex.tags.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1">
+                                {ex.tags.map((t) => (
+                                  <span
+                                    key={t}
+                                    className="px-1.5 py-0.2 rounded bg-[#e8dbcc] text-[#5c474b] text-[10px] font-medium"
+                                  >
+                                    #{t}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Instructions snippet / 動作要點 */}
+                          {ex.instructions && (
+                            <p className="text-[11px] text-[#6e545a] line-clamp-2 bg-[#fdfbf7] p-2 rounded-xl border border-[#e2d5c5]/60 font-normal leading-relaxed">
+                              💡 要點: {ex.instructions}
+                            </p>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleAddFromLibrary(ex)}
+                          className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs shadow-md active:scale-95 transition-all shrink-0 self-end sm:self-center flex items-center gap-1"
+                        >
+                          <Plus className="w-3.5 h-3.5 stroke-[3]" /> 加入課表
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Add Custom Exercise Modal */}
       {isCustomModalOpen && (
