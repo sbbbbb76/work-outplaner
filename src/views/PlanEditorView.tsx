@@ -511,7 +511,7 @@ export const PlanEditorView: React.FC<PlanEditorViewProps> = ({
 
       {/* Select from Library Modal with Tag Partitioning & Category Filtering */}
       {isLibraryModalOpen && (() => {
-        const CATEGORIES: MuscleCategory[] = ['胸部', '背部', '腿部', '肩膀', '手臂', '核心', '全身/有氧'];
+        const CATEGORIES: MuscleCategory[] = ['胸部', '背部', '腿部', '肩膀', '手臂', '核心', '全身/有氧', '拉伸'];
 
         const allLibraryTags = Array.from(
           new Set(
@@ -790,7 +790,7 @@ export const PlanEditorView: React.FC<PlanEditorViewProps> = ({
                   onChange={(e) => setCustomCategory(e.target.value as MuscleCategory)}
                   className="w-full px-3 py-2 bg-[#fdfbf7] border border-[#e2d5c5] rounded-xl text-sm text-[#382328] focus:outline-none focus:border-rose-400"
                 >
-                  {['胸部', '背部', '腿部', '肩膀', '手臂', '核心', '全身/有氧'].map((cat) => (
+                  {['胸部', '背部', '腿部', '肩膀', '手臂', '核心', '全身/有氧', '拉伸'].map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>

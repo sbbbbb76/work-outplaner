@@ -8,7 +8,7 @@ export interface Client {
   createdAt: string;
 }
 
-export type MuscleCategory = '胸部' | '背部' | '腿部' | '肩膀' | '手臂' | '核心' | '全身/有氧';
+export type MuscleCategory = '胸部' | '背部' | '腿部' | '肩膀' | '手臂' | '核心' | '全身/有氧' | '拉伸';
 
 export interface Exercise {
   id: string;

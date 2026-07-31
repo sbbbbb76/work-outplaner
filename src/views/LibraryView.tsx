@@ -14,7 +14,7 @@ interface LibraryViewProps {
   onShowToast: (text: string, type: 'success' | 'error' | 'info') => void;
 }
 
-const CATEGORIES: MuscleCategory[] = ['胸部', '背部', '腿部', '肩膀', '手臂', '核心', '全身/有氧'];
+const CATEGORIES: MuscleCategory[] = ['胸部', '背部', '腿部', '肩膀', '手臂', '核心', '全身/有氧', '拉伸'];
 
 export const LibraryView: React.FC<LibraryViewProps> = ({
   exercises,
